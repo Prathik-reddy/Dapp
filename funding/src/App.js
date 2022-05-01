@@ -11,8 +11,13 @@ function App() {
     contract : null,
   });
 
-  const [accounts, setaccounts] = useState(null);
+  const [account, setaccount] = useState(null);
   const [balance, setbalance] = useState(null);
+  const [reload, setreload] = useState(false);
+
+  const reloadEffect = ()=> {
+    setreload(!reload);
+  }
   useEffect(() => {
     const loadProvider = async () => {
       const provider = await detectEthereumProvider()
@@ -43,13 +48,30 @@ function App() {
 
     }
     web3Api.contract && loadBalance();
-  }, [web3Api]);
+  }, [web3Api,reload]);
 
+  const transferFunds = async()=> {
+    const {web3,contract} = web3Api;
+    await contract.transfer({
+      from : account,
+      value:web3.utils.toWei("2","ether"),
+    })
+    reloadEffect();
+  }
+
+ const withDrawFunds = async()=> {
+   const {web3,contract} = web3Api;
+   const withDrawAmt = web3.utils.toWei("2","ether");
+   await contract.withDraw(withDrawAmt,{
+     from : account,
+   })
+   reloadEffect();
+ }
 
   useEffect(() => {
     const getAcc = async () => {
       const acc = await web3Api.web3.eth.getAccounts();
-      setaccounts(acc[0]);
+      setaccount(acc[0]);
     }
     web3Api.web3 && getAcc();
 
@@ -62,26 +84,26 @@ function App() {
         <div className="card-body">
           <h5 className="card-title">Balance: {balance?balance:"no"} ETH </h5>
           <p className="card-text">
-            Account : {accounts ? accounts : "Not connected"}
+            Account : {account ? account : "Not connected"}
           </p>
           {/* <button
             type="button"
             className="btn btn-success"
             onClick={async () => {
-              const accounts = await window.ethereum.request({
-                method: "eth_requestAccounts",
+              const account = await window.ethereum.request({
+                method: "eth_requestAccount",
               });
-              console.log(accounts);
+              console.log(account);
             }}
           >
             Connect to metamask
           </button> */}
           &nbsp;
-          <button type="button" className="btn btn-success ">
+          <button type="button" className="btn btn-success " onClick={transferFunds}>
             Transfer
           </button>
           &nbsp;
-          <button type="button" className="btn btn-primary ">
+          <button type="button" className="btn btn-primary " onClick={withDrawFunds}>
             Withdraw
           </button>
         </div>
