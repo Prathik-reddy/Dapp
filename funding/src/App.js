@@ -1,15 +1,36 @@
-import logo from './logo.svg';
 import './App.css';
-import React, {useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
+import Web3 from "web3";
 
 function App() {
+  const [web3Api, setWeb3Api] = useState({
+    provider: null,
+    web3: null,
+  });
 
   useEffect(() => {
-    const loadProvider = async()=>{
-      console.log(window.web);
-      console.log(window.ethereum);
+    const loadProvider = async () => {
+      let provider = null;
+      if (window.ethereum) {
+        provider = window.ethereum;
+        try {
+          await window.ethereum.request({ method: 'eth_requestAccounts' });
+        } catch (e) {
+          console.log(e);
+        }
+      } else if (window.web3) {
+        provider = window.web3.currentProvider;
+      } else if (!process.env.production) {
+        provider = new Web3.providers.HttpProvider("http://localhost:7545");
+      }
+      setWeb3Api({
+        web3: new Web3(provider),
+        provider,
+      })
+
     }
     loadProvider();
+    console.log(web3Api.web3);
   }, [])
 
   return (
@@ -21,7 +42,7 @@ function App() {
           <p className="card-text">
             Account : 0x389A79cdE6664c82A03B7Bd3E5b078D873f04A15
           </p>
-          <button
+          {/* <button
             type="button"
             className="btn btn-success"
             onClick={async () => {
@@ -32,7 +53,7 @@ function App() {
             }}
           >
             Connect to metamask
-          </button>
+          </button> */}
           &nbsp;
           <button type="button" className="btn btn-success ">
             Transfer
@@ -42,7 +63,7 @@ function App() {
             Withdraw
           </button>
         </div>
-        <div className="card-footer text-muted">Code Eater</div>
+        <div className="card-footer text-muted ">Prathik Reddy</div>
       </div>
     </>
   );
