@@ -1,6 +1,7 @@
 import './App.css';
 import React, { useState, useEffect } from 'react';
 import Web3 from "web3";
+import detectEthereumProvider from '@metamask/detect-provider'
 
 function App() {
   const [web3Api, setWeb3Api] = useState({
@@ -8,30 +9,35 @@ function App() {
     web3: null,
   });
 
+  const [accounts, setaccounts] = useState(null);
   useEffect(() => {
     const loadProvider = async () => {
-      let provider = null;
-      if (window.ethereum) {
-        provider = window.ethereum;
-        try {
-          await window.ethereum.request({ method: 'eth_requestAccounts' });
-        } catch (e) {
-          console.log(e);
-        }
-      } else if (window.web3) {
-        provider = window.web3.currentProvider;
-      } else if (!process.env.production) {
-        provider = new Web3.providers.HttpProvider("http://localhost:7545");
+      const provider = await detectEthereumProvider()
+
+      if (provider) {
+        console.log('Ethereum successfully detected!');
+        setWeb3Api({
+          web3: new Web3(provider),
+          provider,
+        })
+        provider.request({method:"eth_requestAccounts"});
+      } else {
+        console.error("Please install MetaMask!");
       }
-      setWeb3Api({
-        web3: new Web3(provider),
-        provider,
-      })
 
     }
     loadProvider();
-    console.log(web3Api.web3);
+    // console.log(web3Api.web3);
   }, [])
+
+  useEffect(() => {
+    const getAcc = async () => {
+      const acc = await web3Api.web3.eth.getAccounts();
+      setaccounts(acc[0]);
+    }
+    web3Api.web3 && getAcc();
+
+  }, [web3Api.web3])
 
   return (
     <>
@@ -40,7 +46,7 @@ function App() {
         <div className="card-body">
           <h5 className="card-title">Balance: 20 ETH </h5>
           <p className="card-text">
-            Account : 0x389A79cdE6664c82A03B7Bd3E5b078D873f04A15
+            Account : {accounts ? accounts : "Not connected"}
           </p>
           {/* <button
             type="button"
